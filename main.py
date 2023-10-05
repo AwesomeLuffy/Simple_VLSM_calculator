@@ -1,10 +1,39 @@
+def convert_cidr_to_subnet(cidr: int) -> str:
+    if (cidr > 32) or (cidr < 0):
+        return "Not a valid CIDR"
+    _subnet = ""
+    for i in range(0, 32):
+        if i < cidr:
+            _subnet = _subnet + "1"
+            continue
+        _subnet = _subnet + "0"
+
+    # For the 4 octets (so every 8 char) we convert it to int (cause it actually in binary like 1111111.1111111.etc..
+    # And we convert to str to join it and can use it in the function
+    return ".".join([str(int(_subnet[i:i + 8], 2)) for i in range(0, len(_subnet), 8)])
+
+
+def get_cidr(subnet: list) -> int:
+    """
+    This function allow to convert subnet to CIDR
+        Example :
+        255.255.255.0 will result to 24
+    """
+    # For each octet in subnet mask we convert it to binary and count oh many 1 there is
+    CIDR = [bin(i).count("1") for i in subnet]
+    return sum(CIDR)
+
+
 def get_ip_information(ip: str, subnet: str) -> str:
     def print_information():
         print("Entered ip : {}".format(ip))
         print("Entered subnet mask : {}".format(subnet))
+        print("CIDR of the subnet mask : {}".format(get_cidr(subnet_int)))
         print("Network id : {}".format(".".join(network_id)))
         print("Broadcast : {}".format(".".join(broadcast)))
-        print("Number of host : {}".format(sum(inverted_subnet) - 1))
+        print("Number of host : {}".format(2 ** (32 - get_cidr(subnet_int)) - 2))
+        print("Max number of subnet : {}".format(2 ** (32 - get_cidr(subnet_int))))
+        print("Max number of subnet with available host : {}".format(2 ** (30 - get_cidr(subnet_int))))
 
     # Set all ip in int list from input like "192.168.1.1" to [192, 168, 1, 1]
     """
@@ -45,8 +74,20 @@ def get_ip_information(ip: str, subnet: str) -> str:
 
 
 if __name__ == '__main__':
-    result: str = get_ip_information(input("Enter ip address : "),
-                                     input("Enter subnet mask : ")
-                                     )
-    if result is not "":
-        print("An error occurred : {}".format(result))
+
+    isRunning = True
+    while (isRunning):
+        input_ip = input("Enter ip address (enter q to quit) : ")
+        if input_ip == "q":
+            isRunning = False
+            break
+        input_subnet = input("Enter subnet mask or CIDR : ")
+        if input_subnet.isdigit():
+            subnet = convert_cidr_to_subnet(int(input_subnet))
+        else:
+            subnet = input_subnet
+        print("Subnet mask : {}".format(subnet))
+        result: str = get_ip_information(input_ip, subnet)
+        if result != "":
+            print("An error occurred : {}".format(result))
+        print("\n")
